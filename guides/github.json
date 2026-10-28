@@ -1,0 +1,57 @@
+{
+  "app": "GitHub",
+  "domain": "github.com",
+  "mode": "curated",
+  "generatedAt": "2026-10-28T00:00:00.000Z",
+  "resolution": "library entry",
+  "supportsOAuth": true,
+  "tagline": "Register an OAuth app in minutes, no approval - but GitHub nudges you toward GitHub Apps instead.",
+  "summary": "GitHub OAuth apps are self-serve: register in Developer settings and you immediately get a client ID and secret, with no review or approval step for the app itself. The real decision is OAuth app vs GitHub App - GitHub's own docs recommend a GitHub App for most new integrations because OAuth apps can only act on behalf of a user and use coarse scopes.",
+  "difficulty": { "score": 1, "label": "Very easy", "rationale": "Self-serve registration with instant credentials and no approval gate for a standard OAuth app that lets users authorize access to their own GitHub data." },
+  "timeToFirstToken": "About 10-15 minutes: register the app, set the callback URL, exchange a code for a token.",
+  "approvalWait": { "label": "None for the OAuth app itself", "detail": "No verification or approval is required to create and use an OAuth app. A review only enters the picture if you later want a GitHub Marketplace listing, which is optional." },
+  "steps": [
+    { "title": "Open Developer settings", "detail": "Profile picture -> Settings -> Developer settings -> OAuth apps -> New OAuth App (verified path in GitHub's docs).", "actor": "human" },
+    { "title": "Fill in registration fields", "detail": "Application name, Homepage URL, optional description, and the Authorization callback URL (up to 10 callback URLs allowed). Keep everything public-safe - GitHub warns the data you enter is visible to users.", "actor": "both" },
+    { "title": "Register and collect credentials", "detail": "Click Register application. You get the client ID immediately and can generate a client secret. Store the secret in your secret manager, never in the repo.", "actor": "human" },
+    { "title": "Decide OAuth app vs GitHub App", "detail": "If you need fine-grained repository permissions, installation tokens, or to act as the app itself, build a GitHub App instead. GitHub explicitly recommends this for new work.", "actor": "agent" },
+    { "title": "Implement the authorize + token exchange", "detail": "Redirect users to github.com/login/oauth/authorize with your client_id and scopes, then exchange the returned code for an access token server-side. Token expiry is enabled by default for new apps.", "actor": "both" }
+  ],
+  "requirements": [
+    "A GitHub account (or an organization you administer) - human step.",
+    "A public homepage URL and an HTTPS callback URL for production.",
+    "A decision on scopes: OAuth app scopes are coarse (e.g. repo, read:user); check whether a GitHub App's fine-grained permissions fit better."
+  ],
+  "nuances": [
+    "GitHub's docs steer new integrations toward GitHub Apps: OAuth apps can only act on behalf of a user, use coarse scopes, and lack short-lived installation tokens.",
+    "A user or organization can own at most 100 OAuth apps.",
+    "Expire-user-access-tokens is on by default for newly registered apps - your code must handle refresh tokens.",
+    "Listing on the GitHub Marketplace is a separate, optional review; the OAuth app itself needs no approval.",
+    "Fine-grained permission needs (single-repo access) are a signal you picked the wrong app type, not a blocker."
+  ],
+  "agentCanDo": [
+    "Read the current docs and produce the exact registration field values and authorize URL for your use case.",
+    "Compare OAuth app vs GitHub App for your feature list and recommend one.",
+    "Generate the token-exchange code in your stack."
+  ],
+  "humanMustDo": [
+    "Create the OAuth app inside your GitHub account or org (requires your login and ownership).",
+    "Hold the client secret and accept GitHub's terms.",
+    "Choose and justify the scopes your users will see on the consent screen."
+  ],
+  "evidence": [
+    { "claim": "OAuth apps are created under personal account or org Developer settings via a New OAuth App form with name, homepage URL, and up to 10 callback URLs; registration is a single form submit.", "source": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app", "support": "official-docs" },
+    { "claim": "GitHub recommends building a GitHub App instead of an OAuth app for most cases: GitHub Apps offer fine-grained permissions, more user control, and short-lived tokens, while OAuth apps can only act on behalf of a user.", "source": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app", "support": "official-docs" },
+    { "claim": "A user or organization can own up to 100 OAuth apps.", "source": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app", "support": "official-docs" },
+    { "claim": "Expire user access tokens is enabled by default on new OAuth apps.", "source": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app", "support": "official-docs" },
+    { "claim": "The registration path (Settings -> Developer settings -> OAuth apps) was verified in the docs on 2026-10-28; no app was actually created on a live account for this guide.", "source": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app", "support": "uncertain" }
+  ],
+  "uncertainties": [
+    "GitHub Marketplace listing requirements and review duration were not researched - only the OAuth-app creation path.",
+    "Docs pages are partly JS-rendered; the text capture used the published doc content as of 2026-10-28."
+  ],
+  "investigated": [
+    "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
+    "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps"
+  ]
+}
