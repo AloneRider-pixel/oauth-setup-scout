@@ -1,0 +1,66 @@
+{
+  "app": "Google (Gmail / Calendar-class scopes)",
+  "domain": "developers.google.com",
+  "mode": "curated",
+  "generatedAt": "2026-10-28T00:00:00.000Z",
+  "resolution": "library entry",
+  "supportsOAuth": true,
+  "tagline": "Sign-in scopes are instant; sensitive scopes need verification measured in weeks; restricted scopes add a paid annual security assessment.",
+  "summary": "Google's difficulty depends entirely on which scopes your agent needs. Basic identity (openid, email, profile) works immediately with no verification. Sensitive scopes (e.g. reading Calendar events) require OAuth app verification before broad public use: Google's published estimate is 2-3 business days for brand verification and 10 business days for sensitive-scope verification, with a video demo and a privacy policy on a verified domain. Restricted scopes (e.g. Gmail message bodies) take about 6 weeks plus an annual third-party CASA security assessment you pay for. Until verified, sensitive/restricted apps are capped at 100 users and show an unverified-app warning.",
+  "difficulty": { "score": 4, "label": "Hard", "rationale": "Scoped to a public app requesting sensitive Google user-data scopes (the typical agent-builder case for Gmail/Calendar): verification is mandatory before real launch and involves assets many solo developers lack (public home page, privacy policy, domain verification, demo video). Sign-in-only or internal-Workspace apps are much easier (score 1-2); restricted scopes push to 5." },
+  "timeToFirstToken": "Under an hour in Testing mode with up to 100 allowlisted test users (basic identity scopes work for anyone even in Testing). Production use of sensitive scopes: plan weeks, not hours.",
+  "approvalWait": { "label": "2-3 business days (brand) / 10 business days (sensitive) / ~6 weeks (restricted)", "detail": "Google's own FAQ figures, not guaranteed and dependent on your responsiveness. Restricted-scope verification additionally requires a CASA security assessment performed by an independent assessor at a price agreed with them, repeated annually. While unverified, sensitive/restricted scope apps are hard-capped at 100 users over the project's lifetime and users see a danger-style warning." },
+  "steps": [
+    { "title": "Create a Google Cloud project + OAuth consent screen", "detail": "Cloud Console -> APIs & Services -> OAuth consent screen. Choose External (any Google user) or Internal (Workspace org only - Internal skips verification entirely).", "actor": "human" },
+    { "title": "Create an OAuth 2.0 client ID", "detail": "Web application type, set authorized redirect URIs. Client ID/secret are issued immediately - no approval at this step.", "actor": "human" },
+    { "title": "Classify your scopes before writing code", "detail": "Check each scope's classification (non-sensitive / sensitive / restricted) in the API's docs. Request the narrowest scope that covers the feature - Google rejects over-broad requests.", "actor": "agent" },
+    { "title": "Develop in Testing status", "detail": "Up to 100 allowlisted test users; refresh tokens expire after 7 days. Basic identity scopes work for any user even in Testing.", "actor": "both" },
+    { "title": "Prepare verification assets", "detail": "Verify domain ownership in Search Console, publish a home page describing the app, host a privacy policy on the same domain disclosing how you use Google user data, and record a video demonstrating the OAuth flow and scope usage.", "actor": "human" },
+    { "title": "Submit for verification and respond to the review team", "detail": "Submit from the Cloud Console Verification Center, declare all scopes, and answer follow-ups by email. Rejected apps can reapply after fixes.", "actor": "human" }
+  ],
+  "requirements": [
+    "A Google account and Cloud project (human step).",
+    "A verified domain (Search Console) with a public home page and privacy policy on that domain.",
+    "A demo video for sensitive-scope verification.",
+    "For restricted scopes: budget for an annual third-party CASA security assessment.",
+    "A production app that actually works with the declared scopes - reviewers test what you show."
+  ],
+  "nuances": [
+    "The 100-user unverified cap is per project over its lifetime and cannot be reset; exhausting it disables Google sign-in for your app.",
+    "Testing-mode refresh tokens expire in 7 days - fine for development, a trap in production.",
+    "Internal (Workspace-only) apps need no verification at all - if your users are one org, this skips the entire process.",
+    "Google Workspace admins can independently trust, limit, or block your app for their orgs even after Google verification.",
+    "Adding new sensitive/restricted scopes later means re-verification; using unapproved scopes shows users the unverified warning.",
+    "Google user data may not be used to train or improve AI models - directly relevant if your agent summarizes Gmail content."
+  ],
+  "agentCanDo": [
+    "Classify every scope you plan to request and find narrower alternatives in the API docs.",
+    "Draft the consent-screen copy, justification text, privacy-policy section, and the demo-video script.",
+    "Check your home page and privacy policy against Google's published requirements before you submit."
+  ],
+  "humanMustDo": [
+    "Own the Cloud project, the domain, and the Google accounts on it.",
+    "Record the demo video and submit the verification request.",
+    "Correspond with Google's verification team and sign off on policy compliance.",
+    "Pay for and schedule the CASA assessment if you need restricted scopes."
+  ],
+  "evidence": [
+    { "claim": "Verification tiers and official time estimates: brand verification 2-3 business days, sensitive scope verification 10 business days, restricted scope verification 6 weeks plus a security assessment; estimates vary with developer responsiveness.", "source": "https://support.google.com/cloud/answer/13463817?hl=en", "support": "official-docs" },
+    { "claim": "Unverified apps requesting sensitive/restricted scopes show a warning to users and are subject to a 100-user cap over the project's lifetime; exhausting it disables sign-in.", "source": "https://support.google.com/cloud/answer/13463817?hl=en", "support": "official-docs" },
+    { "claim": "Sensitive-scope verification requires: verified domain ownership via Search Console, a public home page, a privacy policy on the same domain disclosing Google user data usage, and a video demonstration; the process 'typically takes 3-5 business days' per this page while the FAQ table says 10 business days.", "source": "https://developers.google.com/identity/protocols/oauth2/production-readiness/sensitive-scope-verification", "support": "official-docs" },
+    { "claim": "Testing status limits external apps to a 100-user test allowlist; apps requesting only openid/email/profile are accessible to any user in Testing; Workspace internal apps need no verification.", "source": "https://developers.google.com/identity/protocols/oauth2/production-readiness/overview", "support": "official-docs" },
+    { "claim": "Restricted-scope security assessments are performed by CASA-authorized independent assessors; Google does not charge for the assessment itself - cost is agreed between developer and assessor - and reassessment is annual.", "source": "https://support.google.com/cloud/answer/13463817?hl=en", "support": "official-docs" },
+    { "claim": "Google API policies prohibit using Google user data to train or improve ML/AI models, including foundational models.", "source": "https://support.google.com/cloud/answer/13463817?hl=en", "support": "official-docs" },
+    { "claim": "Timelines and requirements were read from Google's pages on 2026-10-28; no Cloud project was created and no verification was submitted for this take-home.", "source": "https://developers.google.com/identity/protocols/oauth2/production-readiness/overview", "support": "uncertain" }
+  ],
+  "uncertainties": [
+    "Google's own pages disagree slightly on sensitive-scope timelines (3-5 vs 10 business days) - plan for the larger number.",
+    "CASA assessment pricing is negotiated with individual assessors and is not published by Google; community figures vary widely.",
+    "Scope classifications change; verify each scope's current classification in the specific API's docs."
+  ],
+  "investigated": [
+    "https://developers.google.com/identity/protocols/oauth2/production-readiness/overview",
+    "https://developers.google.com/identity/protocols/oauth2/production-readiness/sensitive-scope-verification",
+    "https://support.google.com/cloud/answer/13463817?hl=en"
+  ]
+}
