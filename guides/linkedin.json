@@ -1,0 +1,60 @@
+{
+  "app": "LinkedIn",
+  "domain": "developer.linkedin.com",
+  "mode": "curated",
+  "generatedAt": "2026-10-28T00:00:00.000Z",
+  "resolution": "library entry",
+  "supportsOAuth": true,
+  "tagline": "Sign-in and sharing are self-serve, but almost everything else sits behind partner-program approval.",
+  "summary": "LinkedIn offers exactly three self-serve OAuth products - Sign in with LinkedIn (OpenID Connect: profile, email) and Share on LinkedIn (posting for a member). Everything else - Marketing/Advertising API, Sales Navigator, talent integrations - requires approval through a partner program, and compliance APIs are closed entirely. Creating any app also requires associating it with a LinkedIn Page and having the Page admin verify the association, which solo builders without a company page often trip over.",
+  "difficulty": { "score": 3, "label": "Moderate", "rationale": "Scoped to the open self-serve products (member sign-in and share): registration is quick but has the Page-verification hoop and a very narrow permission set. If your agent needs advertising, sales, or recruiting data, this becomes a 5 - gated partner programs with business-case review." },
+  "timeToFirstToken": "About 30-60 minutes for Sign in with LinkedIn once your app is created and Page-verified: add the product in the Developer Portal, configure the redirect URL, run the standard OIDC authorization-code flow.",
+  "approvalWait": { "label": "Page admin verification (days); partner programs (weeks+, case-by-case)", "detail": "The app must be associated with a LinkedIn Page, and verification is confirmed by a Page admin - fast if you control the Page, a real blocker if you do not. Open products are usable immediately after that. Marketing API access requires applying to the partner program; Sales Navigator requires SNAP partnership; talent products require their own program applications. LinkedIn does not publish review SLAs for these." },
+  "steps": [
+    { "title": "Create the app in the LinkedIn Developer Portal", "detail": "developer.linkedin.com -> Create app. You must name a LinkedIn Page as the app's publisher - create a Page first if you have none.", "actor": "human" },
+    { "title": "Verify the Page association", "detail": "Generate the verification URL in the app's settings and have a Page admin open it to confirm. Apps are permanently associated with the Page.", "actor": "human" },
+    { "title": "Add products on the Products tab", "detail": "Self-serve: 'Sign in with LinkedIn using OpenID Connect' (profile, email scopes) and 'Share on LinkedIn' (w_member_social). Everything else shows an application/approval path.", "actor": "human" },
+    { "title": "Configure OAuth 2.0 redirect URLs and run OIDC", "detail": "Standard authorization-code flow against linkedin.com/oauth/v2 endpoints; request only the scopes your products grant.", "actor": "both" },
+    { "title": "(Only if needed) Apply to a partner program", "detail": "Marketing API, SNAP, or talent programs each have their own application and review; plan for business-case questions and no guaranteed timeline.", "actor": "human" }
+  ],
+  "requirements": [
+    "A personal LinkedIn account in good standing (human step).",
+    "A LinkedIn Page whose admin will verify the app association - the association is permanent.",
+    "An HTTPS redirect URL for the OAuth flow.",
+    "For anything beyond sign-in/share: an approved partner-program application with a business case."
+  ],
+  "nuances": [
+    "The legacy r_liteprofile and r_emailaddress permissions were replaced by OpenID Connect scopes - older tutorials referencing them are outdated.",
+    "w_member_social (posting) is self-serve, which surprises people who assume all write access is gated.",
+    "There is no general API to read members' profiles or connections - those live in closed/partner products.",
+    "Compliance (archiving) APIs are closed and cannot be requested at all.",
+    "Page association is permanent: choose a Page you will keep, not a throwaway."
+  ],
+  "agentCanDo": [
+    "Map your feature list to LinkedIn's product table and tell you immediately whether it is self-serve or partner-gated.",
+    "Draft the OIDC integration code and the exact redirect configuration.",
+    "Prepare the partner-program application narrative if you need gated APIs."
+  ],
+  "humanMustDo": [
+    "Own the LinkedIn account and the Page, and complete Page verification.",
+    "Accept LinkedIn's API terms and any partner-program agreements.",
+    "Correspond with LinkedIn during partner review."
+  ],
+  "evidence": [
+    { "claim": "Only three permissions are open to all developers without special approval: profile and email (Sign in with LinkedIn using OpenID Connect) and w_member_social (Share on LinkedIn); 'Most permissions and partner programs require explicit approval from LinkedIn.'", "source": "https://learn.microsoft.com/en-us/linkedin/shared/authentication/getting-access", "support": "official-docs" },
+    { "claim": "Advertising API access requires approval via the Developer Portal; Sales Navigator access requires SNAP partnership; talent integrations require applying to their programs; Compliance permissions are closed.", "source": "https://learn.microsoft.com/en-us/linkedin/shared/authentication/getting-access", "support": "official-docs" },
+    { "claim": "Apps must be associated with a LinkedIn Page that acts as the app's publisher; for certain functionality an app verification request must be confirmed by the Page.", "source": "https://www.linkedin.com/help/linkedin/answer/a1665329", "support": "official-docs" },
+    { "claim": "The app-Page association is permanent.", "source": "https://www.linkedin.com/help/linkedin/answer/a1667239", "support": "official-docs" },
+    { "claim": "Requirements and gating were read from LinkedIn/Microsoft pages on 2026-10-28; no LinkedIn app was created and no partner application was submitted for this take-home.", "source": "https://learn.microsoft.com/en-us/linkedin/shared/authentication/getting-access", "support": "uncertain" }
+  ],
+  "uncertainties": [
+    "LinkedIn publishes no review timelines for partner programs; community reports range from days to months.",
+    "The exact set of open products changes over time - the Products tab of a live app is authoritative.",
+    "The developer portal itself requires sign-in, so the live registration flow was not exercised end-to-end."
+  ],
+  "investigated": [
+    "https://learn.microsoft.com/en-us/linkedin/shared/authentication/getting-access",
+    "https://www.linkedin.com/help/linkedin/answer/a1665329",
+    "https://www.linkedin.com/help/linkedin/answer/a1667239"
+  ]
+}
