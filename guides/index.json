@@ -1,0 +1,9 @@
+{
+  "asOf": "2026-10-28",
+  "guides": [
+    { "app": "GitHub", "domain": "github.com", "file": "github.json", "difficulty": { "score": 1, "label": "Very easy" }, "tagline": "Register an OAuth app in minutes, no approval - but GitHub nudges you toward GitHub Apps instead." },
+    { "app": "Slack", "domain": "slack.com", "file": "slack.json", "difficulty": { "score": 2, "label": "Easy" }, "tagline": "Self-serve app creation and distribution with no review - until you want a Marketplace listing, which takes weeks." },
+    { "app": "Google (Gmail / Calendar-class scopes)", "domain": "developers.google.com", "file": "google.json", "difficulty": { "score": 4, "label": "Hard" }, "tagline": "Sign-in scopes are instant; sensitive scopes need verification measured in weeks; restricted scopes add a paid annual security assessment." },
+    { "app": "LinkedIn", "domain": "developer.linkedin.com", "file": "linkedin.json", "difficulty": { "score": 3, "label": "Moderate" }, "tagline": "Sign-in and sharing are self-serve, but almost everything else sits behind partner-program approval." }
+  ]
+}
