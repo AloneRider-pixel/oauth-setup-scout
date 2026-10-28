@@ -118,7 +118,7 @@ async function generateJSON({ system, prompt, schema, maxOutputTokens = 8192, te
       lastErr.status = res.status;
       res = null;
       if (lastErr.status === 503 || lastErr.status === 429) {
-        await new Promise(r => setTimeout(r, 1500 * (attempt + 1) * (attempt + 1)));
+        await new Promise(r => setTimeout(r, [4000, 15000, 35000][attempt] || 35000));
         continue;
       }
       throw lastErr;
@@ -170,7 +170,7 @@ const CANDIDATE_SUBDOMAINS = ['developer', 'developers', 'docs'];
 
 async function tryFetch(url, log, why) {
   try {
-    const page = await withTimeout(fetchPage(url), 14000, 'fetch');
+    const page = await withTimeout(fetchPage(url), 10000, 'fetch');
     log({ step: 'fetch', url: page.url, status: page.status, why });
     if (page.ok && (page.contentType.includes('html') || page.contentType.includes('json') || page.contentType.includes('text'))) {
       return page;
@@ -238,7 +238,7 @@ async function collectEvidence(domain, log) {
     seen.add(key);
     const page = await tryFetch(url, log, why);
     if (!page) return null;
-    const text = htmlToText(page.raw).slice(0, 12000);
+    const text = htmlToText(page.raw).slice(0, 6000);
     evidence.push({ url: page.url, why, text, html: depth === 0 ? page.raw : null });
     return evidence[evidence.length - 1];
   };
@@ -303,14 +303,14 @@ function fallbackSynthesis(query, domain, evidence, log) {
     approvalWait: { label: mentionsReview ? 'Review/approval mentioned in docs' : 'No approval step found in scan', detail: mentionsReview ? 'The docs mention review/verification; the exact trigger and wait were not extracted in this mode.' : 'That does not prove none exists - check the linked docs manually.' },
     steps: [
       { title: 'Open the developer documentation', detail: (oauthPage || ('https://' + domain)) + ' - start here; look for "create app", "register application", or "OAuth".', actor: 'both' },
-      { title: 'Create the OAuth app in the provider console', detail: (consoleUrl ? 'Candidate console/developer page: ' + consoleUrl + '. ' : '') + 'Requires a provider account; an agent on your behalf can reach this page but account creation and consent are human steps.', actor: 'human' },
+      { title: 'Create the OAuth app in the provider console', detail: (consoleUrl ? 'Candidate console/developer page: ' + consoleUrl + '. ' : '') + 'Typically done by a human in the provider\'s web console because it needs an account and consent; some providers offer programmatic app registration - check the linked docs before assuming.', actor: 'human' },
       { title: 'Configure redirect URI and scopes', detail: 'Request the narrowest scopes that cover your use case.', actor: 'both' },
       { title: 'Check review/verification requirements before launch', detail: mentionsReview ? 'Docs mention a review or verification step - read the linked evidence and plan for the wait.' : 'No review requirement surfaced in the automated scan; verify before assuming none.', actor: 'human' },
     ],
-    requirements: ['A provider developer account (human step).', 'A public HTTPS redirect/callback URL for your app.'],
+    requirements: ['A provider developer account (usually registered by a human; a few providers allow API-driven registration).', 'A public HTTPS redirect/callback URL for your app.'],
     nuances: ['This guide was assembled by a crawler + heuristics, not an LLM: treat it as a map to the real docs, not as finished analysis.'],
     agentCanDo: ['Find and read the provider\'s developer/OAuth docs (done - see investigated URLs).', 'Draft the redirect URLs, scope list, and registration field values for you to paste.'],
-    humanMustDo: ['Create the developer account and accept provider terms.', 'Actually register the OAuth app and hold the client secret.', 'Submit any verification/review materials and answer the provider\'s questions.'],
+    humanMustDo: ['Create the developer account and accept provider terms (typical, not universal - verify against the linked docs).', 'Hold the client secret; whoever registers the app owns it.', 'Submit any verification/review materials and answer the provider\'s questions (only where the provider requires review - see the evidence for whether this provider does).'],
     evidence: evidenceRows,
     uncertainties: ['Difficulty rating and exact approval wait were not determined in doc-assisted mode.', 'Some fetched pages may be login-gated or JS-rendered; the crawler only sees public HTML.'],
   };
@@ -318,22 +318,22 @@ function fallbackSynthesis(query, domain, evidence, log) {
 
 // ---------- LLM synthesis ----------
 async function llmSynthesis(query, domain, evidence, log) {
-  const pack = (ev) => ev.map(e => `SOURCE: ${e.url}\n${e.text.slice(0, 7000)}`).join('\n\n=====\n\n').slice(0, 45000);
+  const pack = (ev) => ev.map(e => `SOURCE: ${e.url}\n${e.text.slice(0, 3500)}`).join('\n\n=====\n\n').slice(0, 24000);
 
   // Round 2: let the agent choose up to 3 more pages worth reading
   try {
     const more = await generateJSON({
       system: 'You are investigating how a developer creates and gets approval for an OAuth app at a specific provider. You may request up to 3 more URLs to read. Reply JSON only.',
-      prompt: `App under investigation: ${query} (${domain}).\n\nEvidence already collected:\n${pack(evidence)}\n\nIf a crucial page is missing (OAuth setup, app registration, app review/verification policy, marketplace listing rules), list up to 3 exact URLs to fetch. Prefer URLs you saw in the evidence. JSON: {"urls": [{"url": string, "why": string}]}`,
+      prompt: `App under investigation: ${query} (${domain}).\n\nEvidence already collected:\n${evidence.map(e => 'SOURCE: ' + e.url + '\n' + e.text.slice(0, 1200)).join('\n\n')}\n\nIf a crucial page is missing (OAuth setup, app registration, app review/verification policy, marketplace listing rules), list up to 3 exact URLs to fetch. Prefer URLs you saw in the evidence. JSON: {"urls": [{"url": string, "why": string}]}`,
       schema: { type: 'OBJECT', properties: { urls: { type: 'ARRAY', items: { type: 'OBJECT', properties: { url: { type: 'STRING' }, why: { type: 'STRING' } }, required: ['url','why'] } } }, required: ['urls'] },
-      maxOutputTokens: 3000,
+      maxOutputTokens: 1500,
     });
     for (const u of (more.urls || []).slice(0, 3)) {
       try {
         const parsed = new URL(u.url);
         if (!parsed.protocol.startsWith('http')) continue;
         const page = await tryFetch(parsed.href, log, 'LLM-requested: ' + (u.why || '').slice(0, 80));
-        if (page) evidence.push({ url: page.url, why: 'LLM-requested: ' + (u.why || '').slice(0, 80), text: htmlToText(page.raw).slice(0, 12000) });
+        if (page) evidence.push({ url: page.url, why: 'LLM-requested: ' + (u.why || '').slice(0, 80), text: htmlToText(page.raw).slice(0, 6000) });
       } catch {}
     }
   } catch (e) {
@@ -351,7 +351,7 @@ async function llmSynthesis(query, domain, evidence, log) {
     system,
     prompt: `App under investigation: ${query} (${domain}).\n\nEvidence collected from the live web:\n${pack(evidence)}\n\nProduce the guide JSON.`,
     schema: GUIDE_SCHEMA,
-    maxOutputTokens: 12000,
+    maxOutputTokens: 6000,
   });
   return guide;
 }
