@@ -1,0 +1,10 @@
+{
+  "name": "oauth-setup-scout",
+  "version": "1.0.0",
+  "description": "OAuth app setup guides for agent builders - Composio APM Integrations take-home",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "test": "node test/run.js"
+  }
+}
