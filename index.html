@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OAuth Setup Scout - OAuth app setup guides for agent builders</title>
+<meta name="description" content="Clear, sourced guides for creating and getting approval for provider OAuth apps, plus a live agent that investigates any app.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">OAuth Setup Scout</div>
+    <nav><a href="#library">Library</a><a href="#generate">Generate</a><a href="#method">Method</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1>Know what it takes to get an OAuth app approved - before you start.</h1>
+    <p class="lede">A developer building an AI agent often needs to register an OAuth app with each provider and sometimes get it approved. These guides tell you how hard that is, how long it takes, what can block you, and what an agent can do for you versus where you must take over.</p>
+    <div class="context-note">
+      <strong>First check whether you need your own OAuth app at all.</strong>
+      Composio provides managed OAuth apps for <span id="managed-count">100+</span> toolkits (Gmail, Slack, GitHub, Notion&hellip;), so your users connect without you registering anything.
+      <a href="https://docs.composio.dev/toolkits/managed-auth" target="_blank" rel="noopener">Managed OAuth app directory</a>.
+      This library covers the case where you bring your own.
+    </div>
+  </section>
+
+  <section id="generate" class="gen">
+    <h2>Investigate any app</h2>
+    <p>Type an app name or website. The agent looks up the provider, reads its live developer/OAuth documentation, and generates a cited guide you can share.</p>
+    <form id="gen-form">
+      <input id="gen-input" type="text" placeholder="e.g. Figma, or https://www.figma.com" autocomplete="off" required>
+      <button type="submit" id="gen-btn">Generate guide</button>
+    </form>
+    <div id="gen-status" class="status" hidden></div>
+    <div id="gen-error" class="error" hidden></div>
+  </section>
+
+  <section id="library">
+    <h2>Library</h2>
+    <p class="muted">Four providers with genuinely different setup paths, each checked against current official sources on <span id="lib-date"></span>.</p>
+    <div id="cards" class="cards"></div>
+  </section>
+
+  <section id="method">
+    <h2>How guides are made</h2>
+    <div class="method-grid">
+      <div><h3>Curated guides</h3><p>Researched against the provider's official documentation, with each load-bearing claim linked to its source and labeled <em>official-docs</em>, <em>community</em>, <em>tested</em>, or <em>uncertain</em>. Registration pages were located and read; no third-party OAuth apps were actually created for this take-home, and that boundary is stated in each guide.</p></div>
+      <div><h3>Live agent</h3><p>The generator resolves the app, crawls its public developer docs, then uses an LLM (Gemini) to synthesize a guide that may only cite fetched pages. Without an API key it runs a doc-assisted mode that fetches the same pages but leaves judgment to you - the guide says which mode produced it.</p></div>
+      <div><h3>Honesty policy</h3><p>Tested means actually executed here. Source-supported means the provider's docs say it. Everything else is marked uncertain. Guides carry their investigation log so you can audit what was read.</p></div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p>Built as a Composio APM Integrations take-home demonstration. Not affiliated with the providers covered. Always confirm against the linked official docs before relying on a guide.</p>
+  </footer>
+</main>
+
+<div id="guide-view" class="overlay" hidden>
+  <div class="sheet">
+    <button id="guide-close" class="close" aria-label="Close">&times;</button>
+    <div id="guide-content"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
