@@ -84,8 +84,31 @@ function slugifyName(input) {
   return input.trim().toLowerCase().replace(/[^a-z0-9]+/g, '');
 }
 // Minimal Gemini REST client (no SDK). Free-tier key from env GEMINI_API_KEY.
-// Model default: gemini-3.5-flash (free-tier eligible). Override with GEMINI_MODEL.
-const MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+// Model default: gemini-3.5-flash-lite - the plain 'gemini-3.5-flash' string is not a real
+// model; Google resolves it to a preview flash model with a tiny free-tier quota (5 RPM /
+// 20 requests-DAY, shared per project), which caused production 429s. Flash-Lite is a real
+// documented model id with far more free-tier headroom (15 RPM / 500 RPD).
+const MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
+
+function sanitizeGeminiError(status, errText) {
+  // Log only classified, non-secret diagnostics: status, quota metric/limit/model, retry hint.
+  let msg = '';
+  try {
+    const j = JSON.parse(errText);
+    const e = j.error || {};
+    msg = e.status || '';
+    const m = String(e.message || '');
+    const q = m.match(/Quota exceeded for metric: ([^,]+), limit: ([0-9,]+)(?:, model: ([^\s,.]+))?/i);
+    const r = m.match(/retry in ([0-9.]+)s/i);
+    if (q) msg += (msg ? ' ' : '') + 'quota metric=' + q[1] + ' limit=' + q[2] + (q[3] ? ' model=' + q[3] : '');
+    else msg += (msg ? ' ' : '') + m.slice(0, 120);
+    if (r) msg += ' retryIn=' + r[1] + 's';
+  } catch { msg = String(errText || '').slice(0, 120); }
+  msg = msg.replace(/key=[^&\s]+/gi, 'key=[redacted]').slice(0, 200);
+  return 'gemini ' + status + ': ' + msg;
+}
+
+
 
 function hasKey() {
   return Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.length > 10);
@@ -114,7 +137,7 @@ async function generateJSON({ system, prompt, schema, maxOutputTokens = 8192, te
       });
       if (res.ok) break;
       const errText = await res.text().catch(() => '');
-      lastErr = new Error('gemini ' + res.status + ': ' + errText.slice(0, 300));
+      lastErr = new Error(sanitizeGeminiError(res.status, errText));
       lastErr.status = res.status;
       res = null;
       if (lastErr.status === 503 || lastErr.status === 429) {
@@ -411,7 +434,7 @@ function checkCaps(ip, llmMode) {
 }
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') { res.status(405).json({ error: 'POST only' }); return; }
+  if (req.method !== 'POST') { res.status(405).json({ error: 'POST only', model: MODEL }); return; }
   let body = req.body;
   if (typeof body === 'string') { try { body = JSON.parse(body || '{}'); } catch { body = {}; } }
   const query = (body && body.query || '').toString().trim().slice(0, 200);
