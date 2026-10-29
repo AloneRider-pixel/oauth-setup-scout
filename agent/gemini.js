@@ -5,6 +5,25 @@
 // and supports the same JSON-schema structured output. Override with GEMINI_MODEL.
 const MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
 
+function sanitizeGeminiError(status, errText) {
+  // Log only classified, non-secret diagnostics: status, quota metric/limit/model, retry hint.
+  let msg = '';
+  try {
+    const j = JSON.parse(errText);
+    const e = j.error || {};
+    msg = e.status || '';
+    const m = String(e.message || '');
+    const q = m.match(/Quota exceeded for metric: ([^,]+), limit: ([0-9,]+)(?:, model: ([^\s,.]+))?/i);
+    const r = m.match(/retry in ([0-9.]+)s/i);
+    if (q) msg += (msg ? ' ' : '') + 'quota metric=' + q[1] + ' limit=' + q[2] + (q[3] ? ' model=' + q[3] : '');
+    else msg += (msg ? ' ' : '') + m.slice(0, 120);
+    if (r) msg += ' retryIn=' + r[1] + 's';
+  } catch { msg = String(errText || '').slice(0, 120); }
+  msg = msg.replace(/key=[^&\s]+/gi, 'key=[redacted]').slice(0, 200);
+  return 'gemini ' + status + ': ' + msg;
+}
+
+
 export function hasKey() {
   return Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.length > 10);
 }
@@ -32,7 +51,7 @@ export async function generateJSON({ system, prompt, schema, maxOutputTokens = 8
       });
       if (res.ok) break;
       const errText = await res.text().catch(() => '');
-      lastErr = new Error('gemini ' + res.status + ': ' + errText.slice(0, 300));
+      lastErr = new Error(sanitizeGeminiError(res.status, errText));
       lastErr.status = res.status;
       res = null;
       if (lastErr.status === 503 || lastErr.status === 429) {
