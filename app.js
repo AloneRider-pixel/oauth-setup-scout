@@ -95,7 +95,8 @@ async function deflate(obj){
   }
 }
 async function inflate(hash){
-  const b64 = hash.replace(/-/g,'+').replace(/_/g,'/');
+  // hash arrives as 'g=<payload>' or 'gu=<payload>' - strip the scheme prefix before decoding.
+  const b64 = hash.replace(/^gu?=/, '').replace(/-/g,'+').replace(/_/g,'/');
   const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
   if (hash.startsWith('g=')) {
     const ds = new DecompressionStream('deflate-raw');
