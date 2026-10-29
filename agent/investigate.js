@@ -179,7 +179,7 @@ async function llmSynthesis(query, domain, evidence, log) {
       } catch {}
     }
   } catch (e) {
-    log({ step: 'llm-round2', error: String(e.message || e).slice(0, 150) });
+    log({ step: 'llm-round2', error: String(e.message || e).slice(0, 300) });
   }
 
   const system = `You are an OAuth integration investigator. You produce a practical setup guide for a developer who needs to create an OAuth app with a provider so their own product's users can connect that provider. Rules:
