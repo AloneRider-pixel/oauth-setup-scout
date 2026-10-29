@@ -1,6 +1,9 @@
 // Minimal Gemini REST client (no SDK). Free-tier key from env GEMINI_API_KEY.
-// Model default: gemini-3.5-flash (free-tier eligible). Override with GEMINI_MODEL.
-const MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+// Model default: gemini-3.5-flash-lite. The plain 'gemini-3.5-flash' alias resolves to a
+// preview flash model whose free-tier quota is tiny (5 RPM / 20 RPD, shared per project),
+// which caused production 429s. Flash-Lite has far more free-tier headroom (15 RPM / 500 RPD)
+// and supports the same JSON-schema structured output. Override with GEMINI_MODEL.
+const MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
 
 export function hasKey() {
   return Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.length > 10);
@@ -33,7 +36,7 @@ export async function generateJSON({ system, prompt, schema, maxOutputTokens = 8
       lastErr.status = res.status;
       res = null;
       if (lastErr.status === 503 || lastErr.status === 429) {
-        await new Promise(r => setTimeout(r, 1500 * (attempt + 1) * (attempt + 1)));
+        await new Promise(r => setTimeout(r, [8000, 20000, 45000][attempt] || 45000));
         continue;
       }
       throw lastErr;
