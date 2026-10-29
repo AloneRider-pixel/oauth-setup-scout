@@ -1,6 +1,6 @@
 # OAuth Setup Scout
 
-**Live demo:** (deployment URL added after deploy)
+**Live demo:** https://oauth-setup-scout.vercel.app/
 **What this is:** a Composio APM Integrations take-home. It answers one question for developers building AI agents: *"what will it take to register an OAuth app with provider X and get it approved?"*
 
 ## What it does
@@ -38,7 +38,7 @@ Zero-config: static files at the repo root, one function in `api/`. Set `GEMINI_
 ## Key decisions
 
 - **Scope: the "bring your own OAuth app" path.** Composio already manages OAuth apps for 100+ toolkits; the homepage tells developers to check that directory first. This product focuses on the harder remainder, where the developer must register and possibly get approval - the case where the time/approval uncertainty lives.
-- **Use-case-scoped difficulty, not universal rankings.** "How hard is Google?" has no single answer; difficulty is rated for a stated use case (e.g. "public app with sensitive scopes") and the guide says so.ru
+- **Use-case-scoped difficulty, not universal rankings.** "How hard is Google?" has no single answer; difficulty is rated for a stated use case (e.g. "public app with sensitive scopes") and the guide says so.
 - **Honesty over polish.** Tested means executed; source-supported means the provider's docs say it; everything else is labeled uncertain. The investigation log ships with every guide.
 - **No database.** Share links carry the guide payload in the URL fragment (compressed). Trade-off: links are long (~2-4 KB) and there's no server-side analytics or edit history - acceptable for a take-home, and it keeps the free tier stateless.
 - **Agents investigate, humans register.** Guides split every step into what an agent can do (research, draft values, generate code) and what needs a human (accounts, consent, secrets, provider correspondence).
