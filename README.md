@@ -18,7 +18,7 @@
 - Static front end (`index.html`, `app.js`, `styles.css`, `guides/*.json`) - no framework, no build step.
 - One serverless endpoint `api/generate.js` - runs the investigation pipeline in `agent/`:
   - `investigate.js` - domain resolution (LLM suggestion or search + TLD verification), deterministic doc crawler (probes `developer.`/`docs.` subdomains and common paths, follows OAuth-flavored links), LLM round-2 page selection, final synthesis.
-  - `gemini.js` - minimal Gemini REST client (free-tier key, `GEMINI_API_KEY` env var, server-side only; default model `gemini-3.5-flash`, override with `GEMINI_MODEL`).
+  - `gemini.js` - minimal Gemini REST client (free-tier key, `GEMINI_API_KEY` env var, server-side only; default model `gemini-3.5-flash-lite`, chosen for its free-tier headroom (15 RPM / 500 requests/day vs 5 RPM / 20/day on the preview flash alias); override with `GEMINI_MODEL`).
   - No-key fallback: the same crawler runs, but synthesis is heuristic and the guide is explicitly labeled **doc-assisted** - never mislabeled as LLM output.
 - Evidence discipline: the LLM is instructed to only cite fetched pages; every claim carries a support label (`official-docs` / `community` / `tested` / `uncertain`), and each guide lists every URL investigated.
 
